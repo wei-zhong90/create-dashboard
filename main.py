@@ -43,8 +43,10 @@ metrics_source = """
 
 # response = CW_client.put_dashboard(DashboardName='test', DashboardBody=dashboard_body)
 
+
 def sanitize(s):
     return re.sub(r'\W+', '_', s)
+
 
 def tag_volumes(device_mappings, instance_name, instance_id):
     volumes_list = []
@@ -69,23 +71,27 @@ def tag_volumes(device_mappings, instance_name, instance_id):
 
 # sourcery skip: hoist-statement-from-loop
 # Get full list
+print("Collecting instance list...")
 instances = ec2.instances.all()
 
 # Iterate over the list.Note the use of instance as a resource with attribute here.
 for instance in instances:
-    widget_list = []
-    y_count = 0
-    instance_name = ''
+
+    print(f"Start processing {instance.instance_id}...")
+
+    widget_list=[]
+    y_count=0
+    instance_name=''
     for tag in instance.tags:
         if tag['Key'] == 'Name':
-            instance_name = tag['Value']
-    instance_id = instance.instance_id
-    block_devices = instance.block_device_mappings
-    volumes_list = tag_volumes(block_devices, instance_name, instance_id)
+            instance_name=tag['Value']
+    instance_id=instance.instance_id
+    block_devices=instance.block_device_mappings
+    volumes_list=tag_volumes(block_devices, instance_name, instance_id)
     for volume in volumes_list:
-        iops_metric = metrics_source % (
+        iops_metric=metrics_source % (
             volume, volume, 'VolumeReadOps', 'VolumeWriteOps', region, f'{volume}_iops')
-        iops_widget = {
+        iops_widget={
             "type": "metric",
             "x": 0,
             "y": y_count,
@@ -111,4 +117,7 @@ for instance in instances:
         'widgets': widget_list
     }
 
-    response = CW_client.put_dashboard(DashboardName=sanitize(instance_name), DashboardBody=json.dumps(dashboard_body))
+    response = CW_client.put_dashboard(DashboardName=sanitize(
+        instance_name), DashboardBody=json.dumps(dashboard_body))
+    print(f"Finish generating dashboard for {instance_name}")
+    print("*"*20)
