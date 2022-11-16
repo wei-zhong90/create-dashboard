@@ -10,8 +10,8 @@ CW_client = boto3.client('cloudwatch')
 metrics_source = """
 {
     "metrics": [
-        [ { "expression": "(m2+m3)/(PERIOD(m1)-m1)",
-                            "label": "%s", "id": "e1", "period": 300 } ],
+        [ { "expression": "(m2+m3)/(FLOOR((PERIOD(m1)-m1))+1)",
+                            "label": "%s", "id": "e1", "period": 60 } ],
         [ "AWS/EBS", "VolumeIdleTime", "VolumeId",
             "%s", { "id": "m1", "visible": false } ],
         [ ".", "%s", ".", ".", { "id": "m2", "visible": false } ],
@@ -118,6 +118,6 @@ for instance in instances:
     }
 
     response = CW_client.put_dashboard(DashboardName=sanitize(
-        instance_name), DashboardBody=json.dumps(dashboard_body))
+        f"{instance_name}_ebs_performance"), DashboardBody=json.dumps(dashboard_body))
     print(f"Finish generating dashboard for {instance_name}")
     print("*"*20)
