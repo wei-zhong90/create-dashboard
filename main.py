@@ -10,7 +10,7 @@ CW_client = boto3.client('cloudwatch')
 metrics_source = """
 {
     "metrics": [
-        [ { "expression": "(m2+m3)/(FLOOR((PERIOD(m1)-m1))+1)",
+        [ { "expression": "IF(m1>(PERIOD(m1)*4/5), 0, (m2+m3)/(PERIOD(m1)-m1))",
                             "label": "%s", "id": "e1", "period": 60 } ],
         [ "AWS/EBS", "VolumeIdleTime", "VolumeId",
             "%s", { "id": "m1", "visible": false } ],
